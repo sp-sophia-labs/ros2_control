@@ -70,6 +70,40 @@ rclcpp::NodeOptions get_cm_node_options()
   return node_options;
 }
 
+rclcpp::NodeOptions load_cm_node_options(rclcpp::NodeOptions node_options)
+{
+  // Required for getting types of controllers to be loaded via service call
+  node_options.allow_undeclared_parameters(true);
+  node_options.automatically_declare_parameters_from_overrides(true);
+  return node_options;
+}
+
+ControllerManager::ControllerManager(
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::Executor> executor, rclcpp::NodeOptions node_options, 
+  const std::string & manager_node_name, const std::string & namespace_)
+: rclcpp::Node(manager_node_name, namespace_, load_cm_node_options(node_options)),
+  resource_manager_(std::move(resource_manager)),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceName, kControllerInterface))
+{
+  init_services();
+}
+
+ControllerManager::ControllerManager(
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
+  const std::string & namespace_)
+: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  resource_manager_(std::move(resource_manager)),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceName, kControllerInterface))
+{
+  init_services();
+}
+
 ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & namespace_)
@@ -96,19 +130,6 @@ ControllerManager::ControllerManager(
   // TODO(all): Here we should start only "auto-start" resources
   resource_manager_->start_components();
 
-  init_services();
-}
-
-ControllerManager::ControllerManager(
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
-  resource_manager_(std::move(resource_manager)),
-  executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceName, kControllerInterface))
-{
   init_services();
 }
 
@@ -650,7 +671,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
     return nullptr;
   }
 
-  if (controller.c->init(controller.info.name) == controller_interface::return_type::ERROR)
+  if (controller.c->init(controller.info.name, controller.info.namespace) == controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
