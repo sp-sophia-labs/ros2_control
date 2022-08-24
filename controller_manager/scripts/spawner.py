@@ -114,6 +114,8 @@ def is_controller_loaded(node, controller_manager, controller_name):
 def make_absolute(name):
     return name if name.startswith('/') else ('/' + name)
 
+def namespace_name(name, namespace):
+    return namespace + '/' + name if namespace else name
 
 def main(args=None):
 
@@ -127,6 +129,10 @@ def main(args=None):
     parser.add_argument(
         '-p', '--param-file',
         help='Controller param file to be loaded into controller node before configure',
+        required=False)
+    parser.add_argument(
+        '-n', '--namespace',
+        help='Namespace for the controller',default='',
         required=False)
     parser.add_argument(
         '--load-only', help='Only load the controller and leave unconfigured.',
@@ -149,6 +155,7 @@ def main(args=None):
     command_line_args = rclpy.utilities.remove_ros_args(args=sys.argv)[1:]
     args = parser.parse_args(command_line_args)
     controller_name = args.controller_name
+    controller_namespace = args.namespace
     controller_manager_name = make_absolute(args.controller_manager)
     param_file = args.param_file
     controller_type = args.controller_type
@@ -164,26 +171,27 @@ def main(args=None):
             node.get_logger().error('Controller manager not available')
             return 1
 
-        if is_controller_loaded(node, controller_manager_name, controller_name):
+        namespaced_controller_name = namespace_name(controller_name, controller_namespace)
+        if is_controller_loaded(node, controller_manager_name, namespaced_controller_name):
             node.get_logger().info('Controller already loaded, skipping load_controller')
         else:
             if controller_type:
                 ret = subprocess.run(['ros2', 'param', 'set', controller_manager_name,
-                                      controller_name + '.type', controller_type])
+                                      namespaced_controller_name + '.type', controller_type])
             ret = load_controller(
-                node, controller_manager_name, controller_name)
+                node, controller_manager_name, controller_name, controller_namespace)
             if not ret.ok:
                 # Error message printed by ros2 control
                 return 1
-            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + controller_name + bcolors.ENDC)
+            node.get_logger().info(bcolors.OKBLUE + 'Loaded ' + namespaced_controller_name + bcolors.ENDC)
 
         if param_file:
-            ret = subprocess.run(['ros2', 'param', 'load', controller_name,
+            ret = subprocess.run(['ros2', 'param', 'load', namespaced_controller_name,
                                   param_file])
             if ret.returncode != 0:
                 # Error message printed by ros2 param
                 return ret.returncode
-            node.get_logger().info('Loaded ' + param_file + ' into ' + controller_name)
+            node.get_logger().info('Loaded ' + param_file + ' into ' + namespaced_controller_name)
 
         if not args.load_only:
             ret = configure_controller(
@@ -206,7 +214,7 @@ def main(args=None):
                     return 1
 
                 node.get_logger().info(bcolors.OKGREEN + 'Configured and started ' +
-                                       bcolors.OKCYAN + controller_name + bcolors.ENDC)
+                                       bcolors.OKCYAN + namespaced_controller_name + bcolors.ENDC)
 
         if not args.unload_on_kill:
             return 0

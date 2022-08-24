@@ -6,5 +6,6 @@
 # constructed, configured and started or not.
 
 string name
+string namespacee
 ---
 bool ok
