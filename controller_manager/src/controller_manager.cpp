@@ -221,8 +221,8 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
   const std::string & controller_name, const std::string & controller_namespace)
 {
-  const std::string controller_namespaces_name = controller_namespace + '/' + controller_name;
-  const std::string param_name = controller_namespaces_name + ".type";
+  const std::string controller_namespaced_name = controller_namespace + '/' + controller_name;
+  const std::string param_name = controller_namespaced_name + ".type";
   std::string controller_type;
 
   // We cannot declare the parameters for the controllers that will be loaded in the future,
@@ -238,7 +238,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   if (!get_parameter(param_name, controller_type))
   {
     RCLCPP_ERROR(
-      get_logger(), "The 'type' param was not defined for '%s'.", controller_namespaces_name.c_str());
+      get_logger(), "The 'type' param was not defined for '%s'.", controller_namespaced_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_namespace, controller_type);
@@ -984,7 +984,7 @@ void ControllerManager::load_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading service locked");
 
-  response->ok = load_controller(request->name, request->namespacee).get() != nullptr;
+  response->ok = load_controller(request->name, request->robot_namespace).get() != nullptr;
 
   RCLCPP_DEBUG(
     get_logger(), "loading service finished for controller '%s' ", request->name.c_str());
@@ -1017,7 +1017,7 @@ void ControllerManager::load_and_configure_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading and configure service locked");
 
-  response->ok = load_controller(request->name, request->namespacee).get();
+  response->ok = load_controller(request->name, request->robot_namespace).get();
 
   if (response->ok)
   {
@@ -1040,7 +1040,7 @@ void ControllerManager::load_and_start_controller_service_cb(
   std::lock_guard<std::mutex> guard(services_lock_);
   RCLCPP_DEBUG(get_logger(), "loading and activating service locked");
 
-  response->ok = load_controller(request->name, request->namespacee).get();
+  response->ok = load_controller(request->name, request->robot_namespace).get();
 
   if (response->ok)
   {

@@ -95,7 +95,7 @@ public:
   virtual return_type init(const std::string & controller_name);
 
   CONTROLLER_INTERFACE_PUBLIC
-  virtual return_type init(const std::string & controller_name,const std::string & namespace_);
+  virtual return_type init(const std::string & controller_name, const std::string & namespace_);
 
   CONTROLLER_INTERFACE_PUBLIC
   virtual return_type update(const rclcpp::Time & time, const rclcpp::Duration & period) = 0;
