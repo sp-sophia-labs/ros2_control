@@ -70,27 +70,6 @@ rclcpp::NodeOptions get_cm_node_options()
   return node_options;
 }
 
-rclcpp::NodeOptions load_cm_node_options(rclcpp::NodeOptions node_options)
-{
-  // Required for getting types of controllers to be loaded via service call
-  node_options.allow_undeclared_parameters(true);
-  node_options.automatically_declare_parameters_from_overrides(true);
-  return node_options;
-}
-
-ControllerManager::ControllerManager(
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::Executor> executor, rclcpp::NodeOptions node_options, 
-  const std::string & manager_node_name, const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, load_cm_node_options(node_options)),
-  resource_manager_(std::move(resource_manager)),
-  executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceName, kControllerInterface))
-{
-  init_services();
-}
-
 ControllerManager::ControllerManager(
   std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
@@ -222,7 +201,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   const std::string & controller_name, const std::string & controller_namespace)
 {
   const std::string controller_namespaced_name = controller_namespace + '/' + controller_name;
-  const std::string param_name = controller_namespaced_name + ".type";
+  const std::string param_name = controller_name + ".type";
   std::string controller_type;
 
   // We cannot declare the parameters for the controllers that will be loaded in the future,
@@ -238,7 +217,7 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   if (!get_parameter(param_name, controller_type))
   {
     RCLCPP_ERROR(
-      get_logger(), "The 'type' param was not defined for '%s'.", controller_namespaced_name.c_str());
+      get_logger(), "The 'type' param was not defined for '%s'.", controller_name.c_str());
     return nullptr;
   }
   return load_controller(controller_name, controller_namespace, controller_type);
