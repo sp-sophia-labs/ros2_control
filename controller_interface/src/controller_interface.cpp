@@ -47,12 +47,14 @@ return_type ControllerInterface::init(const std::string & controller_name)
   return result;
 }
 
-return_type ControllerInterface::init(const std::string & controller_name, const std::string & namespace_)
+return_type ControllerInterface::init(
+  const std::string & controller_name, const std::string & namespace_)
 {
   node_ = std::make_shared<rclcpp::Node>(
-    controller_name, namespace_, rclcpp::NodeOptions()
-                       .allow_undeclared_parameters(true)
-                       .automatically_declare_parameters_from_overrides(true));
+    controller_name, namespace_,
+    rclcpp::NodeOptions()
+      .allow_undeclared_parameters(true)
+      .automatically_declare_parameters_from_overrides(true));
 
   return_type result = return_type::OK;
   switch (on_init())

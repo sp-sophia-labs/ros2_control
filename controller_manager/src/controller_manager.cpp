@@ -172,7 +172,8 @@ void ControllerManager::init_services()
 }
 
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
-  const std::string & controller_name, const std::string & controller_namespace, const std::string & controller_type)
+  const std::string & controller_name, const std::string & controller_namespace,
+  const std::string & controller_type)
 {
   RCLCPP_INFO(get_logger(), "Loading controller '%s'", controller_name.c_str());
 
@@ -652,11 +653,14 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
     return nullptr;
   }
 
-  if (controller.c->init(controller.info.name, controller.info.namespace_) == controller_interface::return_type::ERROR)
+  if (
+    controller.c->init(controller.info.name, controller.info.namespace_) ==
+    controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not initialize the controller named '%s'", (controller.info.namespace_ + '/' + controller.info.name).c_str());
+      get_logger(), "Could not initialize the controller named '%s'",
+      (controller.info.namespace_ + '/' + controller.info.name).c_str());
     return nullptr;
   }
 
