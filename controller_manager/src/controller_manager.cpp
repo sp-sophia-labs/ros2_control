@@ -192,7 +192,6 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
   ControllerSpec controller_spec;
   controller_spec.c = controller;
   controller_spec.info.name = controller_name;
-  controller_spec.info.namespace_ = controller_namespace;
   controller_spec.info.type = controller_type;
 
   return add_controller_impl(controller_spec);
@@ -654,13 +653,12 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::add_contro
   }
 
   if (
-    controller.c->init(controller.info.name, controller.info.namespace_) ==
+    controller.c->init(controller.info.name, get_namespace()) ==
     controller_interface::return_type::ERROR)
   {
     to.clear();
     RCLCPP_ERROR(
-      get_logger(), "Could not initialize the controller named '%s'",
-      (controller.info.namespace_ + '/' + controller.info.name).c_str());
+      get_logger(), "Could not initialize the controller named '%s'", controller.info.name.c_str());
     return nullptr;
   }
 
