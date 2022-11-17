@@ -71,19 +71,6 @@ rclcpp::NodeOptions get_cm_node_options()
 }
 
 ControllerManager::ControllerManager(
-  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
-  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
-  const std::string & namespace_)
-: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
-  resource_manager_(std::move(resource_manager)),
-  executor_(executor),
-  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
-    kControllerInterfaceName, kControllerInterface))
-{
-  init_services();
-}
-
-ControllerManager::ControllerManager(
   std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
   const std::string & namespace_)
 : rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
@@ -109,6 +96,19 @@ ControllerManager::ControllerManager(
   // TODO(all): Here we should start only "auto-start" resources
   resource_manager_->start_components();
 
+  init_services();
+}
+
+ControllerManager::ControllerManager(
+  std::unique_ptr<hardware_interface::ResourceManager> resource_manager,
+  std::shared_ptr<rclcpp::Executor> executor, const std::string & manager_node_name,
+  const std::string & namespace_)
+: rclcpp::Node(manager_node_name, namespace_, get_cm_node_options()),
+  resource_manager_(std::move(resource_manager)),
+  executor_(executor),
+  loader_(std::make_shared<pluginlib::ClassLoader<controller_interface::ControllerInterface>>(
+    kControllerInterfaceName, kControllerInterface))
+{
   init_services();
 }
 
