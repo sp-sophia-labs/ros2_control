@@ -199,7 +199,6 @@ controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_contr
 controller_interface::ControllerInterfaceSharedPtr ControllerManager::load_controller(
   const std::string & controller_name)
 {
-  const std::string controller_namespaced_name = get_namespace() + '/' + controller_name;
   const std::string param_name = controller_name + ".type";
   std::string controller_type;
 
